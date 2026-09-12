@@ -8,6 +8,7 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 
 const authRoutes = require("./routes/auth");
+const tripRoutes = require("./routes/trips");
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use(express.json());
 
 // Authentication routes
 app.use("/api/auth", authRoutes);
+app.use("/api/trips", tripRoutes);
 
 // Test route
 app.get("/", (req, res) => {
