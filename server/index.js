@@ -9,6 +9,7 @@ require("dotenv").config();
 
 const authRoutes = require("./routes/auth");
 const tripRoutes = require("./routes/trips");
+const userRoutes = require("./routes/userRoutes");
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use(express.json());
 // Authentication routes
 app.use("/api/auth", authRoutes);
 app.use("/api/trips", tripRoutes);
+app.use("/api/users", userRoutes);
 
 // Test route
 app.get("/", (req, res) => {
