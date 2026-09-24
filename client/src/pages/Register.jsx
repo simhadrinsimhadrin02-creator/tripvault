@@ -1,15 +1,21 @@
 import { useState } from "react";
 import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 function Register() {
+    const navigate = useNavigate();
+
     const [name, setName] = useState("");
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [message, setMessage] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const handleRegister = async (e) => {
         e.preventDefault();
+
+        setLoading(true);
 
         try {
             const response = await axios.post(
@@ -18,103 +24,139 @@ function Register() {
                     name,
                     username,
                     email,
-                    password
+                    password,
                 }
             );
 
-            setMessage(response.data.message);
+            toast.success(
+                response.data.message ||
+                    "Registration successful!"
+            );
 
             setName("");
             setUsername("");
             setEmail("");
             setPassword("");
 
+            setTimeout(() => {
+                navigate("/login");
+            }, 1000);
         } catch (error) {
-            setMessage(
+            toast.error(
                 error.response?.data?.message ||
-                "Registration failed"
+                    "Registration failed. Please try again."
             );
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div>
-            <h1>TripVault</h1>
-            <h2>Create Account</h2>
+        <div className="auth-page">
+            <div className="auth-card">
 
-            <form onSubmit={handleRegister}>
+                <div className="auth-header">
+                    <div className="auth-logo">🌍</div>
 
-                <div>
-                    <label>Name</label>
-                    <br />
+                    <h1>TripVault</h1>
 
-                    <input
-                        type="text"
-                        value={name}
-                        onChange={(e) =>
-                            setName(e.target.value)
-                        }
-                        placeholder="Enter your name"
-                    />
+                    <p>
+                        Create your account and start your journey.
+                    </p>
                 </div>
 
-                <br />
+                <form onSubmit={handleRegister}>
 
-                <div>
-                    <label>Username</label>
-                    <br />
+                    <div className="form-group">
+                        <label htmlFor="name">
+                            Name
+                        </label>
 
-                    <input
-                        type="text"
-                        value={username}
-                        onChange={(e) =>
-                            setUsername(e.target.value)
-                        }
-                        placeholder="Enter a username"
-                    />
+                        <input
+                            id="name"
+                            type="text"
+                            value={name}
+                            onChange={(e) =>
+                                setName(e.target.value)
+                            }
+                            placeholder="Enter your name"
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="username">
+                            Username
+                        </label>
+
+                        <input
+                            id="username"
+                            type="text"
+                            value={username}
+                            onChange={(e) =>
+                                setUsername(e.target.value)
+                            }
+                            placeholder="Choose a username"
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="register-email">
+                            Email
+                        </label>
+
+                        <input
+                            id="register-email"
+                            type="email"
+                            value={email}
+                            onChange={(e) =>
+                                setEmail(e.target.value)
+                            }
+                            placeholder="Enter your email"
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="register-password">
+                            Password
+                        </label>
+
+                        <input
+                            id="register-password"
+                            type="password"
+                            value={password}
+                            onChange={(e) =>
+                                setPassword(e.target.value)
+                            }
+                            placeholder="Create a password"
+                            required
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="auth-button"
+                        disabled={loading}
+                    >
+                        {loading
+                            ? "Creating account..."
+                            : "Register"}
+                    </button>
+
+                </form>
+
+                <div className="auth-footer">
+                    <p>
+                        Already have an account?{" "}
+                        <Link to="/login">
+                            Login
+                        </Link>
+                    </p>
                 </div>
 
-                <br />
-
-                <div>
-                    <label>Email</label>
-                    <br />
-
-                    <input
-                        type="email"
-                        value={email}
-                        onChange={(e) =>
-                            setEmail(e.target.value)
-                        }
-                        placeholder="Enter your email"
-                    />
-                </div>
-
-                <br />
-
-                <div>
-                    <label>Password</label>
-                    <br />
-
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) =>
-                            setPassword(e.target.value)
-                        }
-                        placeholder="Enter your password"
-                    />
-                </div>
-
-                <br />
-
-                <button type="submit">
-                    Register
-                </button>
-
-            </form>
-
-            {message && <p>{message}</p>}
+            </div>
         </div>
     );
 }

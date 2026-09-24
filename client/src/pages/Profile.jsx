@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 function Profile() {
     const { username } = useParams();
@@ -21,7 +23,7 @@ function Profile() {
             } catch (error) {
                 setMessage(
                     error.response?.data?.message ||
-                    "Failed to load profile"
+                        "Failed to load profile"
                 );
             } finally {
                 setLoading(false);
@@ -31,118 +33,240 @@ function Profile() {
         fetchProfile();
     }, [username]);
 
+    // ==========================================
+    // LOADING STATE
+    // ==========================================
     if (loading) {
-        return <p>Loading profile...</p>;
+        return (
+            <>
+                <Navbar />
+
+                <div className="page-container">
+                    <div className="loading-state">
+                        <div className="spinner"></div>
+                        <p>Loading profile...</p>
+                    </div>
+                </div>
+
+                <Footer />
+            </>
+        );
     }
 
+    // ==========================================
+    // PROFILE NOT FOUND
+    // ==========================================
     if (!profile) {
         return (
-            <div>
-                <h2>Profile not found</h2>
-                <p>{message}</p>
+            <>
+                <Navbar />
 
-                <br />
+                <main className="page-container">
+                    <div className="empty-state">
+                        <div className="empty-icon">👤</div>
 
-                <button onClick={() => navigate("/")}>
-                    Go Home
-                </button>
-            </div>
+                        <h2>Profile not found</h2>
+
+                        <p>
+                            {message ||
+                                "The profile you are looking for does not exist."}
+                        </p>
+
+                        <button
+                            onClick={() =>
+                                navigate("/dashboard")
+                            }
+                        >
+                            Go to Dashboard
+                        </button>
+                    </div>
+                </main>
+
+                <Footer />
+            </>
         );
     }
 
     return (
         <div>
-            <h1>{profile.user.name}</h1>
+            <Navbar username={profile.user.username} />
 
-            <p>
-                <strong>@{profile.user.username}</strong>
-            </p>
+            <main className="page-container">
 
-            <p>
-                {profile.user.bio || "No bio available."}
-            </p>
+                {/* Profile Header */}
+                <section className="profile-header card">
 
-            <hr />
+                    <div className="profile-avatar">
+                        {profile.user.name
+                            ? profile.user.name
+                                  .charAt(0)
+                                  .toUpperCase()
+                            : "U"}
+                    </div>
 
-            <h2>Trips</h2>
+                    <div className="profile-info">
 
-            {profile.trips.length === 0 ? (
-                <p>No trips available.</p>
-            ) : (
-                <div
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(3, 1fr)",
-                        gap: "20px"
-                    }}
-                >
-                    {profile.trips.map((trip) => (
-                        <div
-                            key={trip._id}
-                            style={{
-                                border: "1px solid #ccc",
-                                padding: "15px",
-                                borderRadius: "10px"
-                            }}
-                        >
-                            {trip.coverImage && (
-                                <img
-                                    src={trip.coverImage}
-                                    alt={trip.title}
-                                    style={{
-                                        width: "100%",
-                                        height: "180px",
-                                        objectFit: "cover"
-                                    }}
-                                />
-                            )}
+                        <h1>{profile.user.name}</h1>
 
-                            <h3>{trip.title}</h3>
+                        <p className="profile-username">
+                            @{profile.user.username}
+                        </p>
+
+                        <p className="profile-bio">
+                            {profile.user.bio ||
+                                "No bio available."}
+                        </p>
+
+                        <div className="profile-stats">
+                            <div>
+                                <strong>
+                                    {profile.trips.length}
+                                </strong>
+                                <span>
+                                    {profile.trips.length === 1
+                                        ? "Trip"
+                                        : "Trips"}
+                                </span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </section>
+
+                {/* Profile Actions */}
+                <div className="profile-actions">
+
+                    <button
+                        onClick={() =>
+                            navigate("/edit-profile")
+                        }
+                    >
+                        Edit Profile
+                    </button>
+
+                    <button
+                        className="secondary-button"
+                        onClick={() =>
+                            navigate("/dashboard")
+                        }
+                    >
+                        ← Dashboard
+                    </button>
+
+                </div>
+
+                {/* Trips */}
+                <section className="profile-trips-section">
+
+                    <div className="section-heading">
+                        <h2>Trips</h2>
+
+                        <span>
+                            {profile.trips.length}{" "}
+                            {profile.trips.length === 1
+                                ? "Trip"
+                                : "Trips"}
+                        </span>
+                    </div>
+
+                    {profile.trips.length === 0 ? (
+                        <div className="empty-state">
+                            <div className="empty-icon">
+                                🧳
+                            </div>
+
+                            <h3>No trips available</h3>
 
                             <p>
-                                <strong>Destination:</strong>{" "}
-                                {trip.destination}
-                            </p>
-
-                            <p>
-                                <strong>Start:</strong>{" "}
-                                {trip.startDate
-                                    ? new Date(
-                                          trip.startDate
-                                      ).toLocaleDateString()
-                                    : "N/A"}
-                            </p>
-
-                            <p>
-                                <strong>End:</strong>{" "}
-                                {trip.endDate
-                                    ? new Date(
-                                          trip.endDate
-                                      ).toLocaleDateString()
-                                    : "N/A"}
-                            </p>
-
-                            <p>
-                                <strong>Rating:</strong>{" "}
-                                ⭐ {trip.rating}/5
+                                This user hasn't added any
+                                trips yet.
                             </p>
                         </div>
-                    ))}
-                </div>
-            )}
+                    ) : (
+                        <div className="profile-trip-grid">
 
-            <br />
+                            {profile.trips.map((trip) => (
+                                <article
+                                    className="profile-trip-card"
+                                    key={trip._id}
+                                >
 
-            <button onClick={() => navigate("/edit-profile")}>
-                Edit Profile
-            </button>
+                                    {trip.coverImage ? (
+                                        <img
+                                            src={trip.coverImage}
+                                            alt={trip.title}
+                                            className="profile-trip-image"
+                                        />
+                                    ) : (
+                                        <div className="profile-trip-placeholder">
+                                            🗺️
+                                        </div>
+                                    )}
 
-            <button
-                onClick={() => navigate("/")}
-                style={{ marginLeft: "10px" }}
-            >
-                Go Home
-            </button>
+                                    <div className="profile-trip-content">
+
+                                        <h3>{trip.title}</h3>
+
+                                        <p>
+                                            <strong>
+                                                📍 Destination:
+                                            </strong>{" "}
+                                            {trip.destination}
+                                        </p>
+
+                                        <p>
+                                            <strong>
+                                                📅 Start:
+                                            </strong>{" "}
+                                            {trip.startDate
+                                                ? new Date(
+                                                      trip.startDate
+                                                  ).toLocaleDateString()
+                                                : "N/A"}
+                                        </p>
+
+                                        <p>
+                                            <strong>
+                                                📅 End:
+                                            </strong>{" "}
+                                            {trip.endDate
+                                                ? new Date(
+                                                      trip.endDate
+                                                  ).toLocaleDateString()
+                                                : "N/A"}
+                                        </p>
+
+                                        <p>
+                                            <strong>
+                                                ⭐ Rating:
+                                            </strong>{" "}
+                                            {trip.rating}/5
+                                        </p>
+
+                                        <button
+                                            onClick={() =>
+                                                navigate(
+                                                    `/trip/${trip._id}`
+                                                )
+                                            }
+                                        >
+                                            View Trip
+                                        </button>
+
+                                    </div>
+
+                                </article>
+                            ))}
+
+                        </div>
+                    )}
+
+                </section>
+
+            </main>
+
+            <Footer />
         </div>
     );
 }

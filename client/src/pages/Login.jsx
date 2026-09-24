@@ -1,71 +1,118 @@
 import { useState } from "react";
 import axios from "axios";
+import { useNavigate, Link } from "react-router-dom";
+import { toast } from "react-toastify";
 
 function Login() {
+    const navigate = useNavigate();
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [message, setMessage] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const handleLogin = async (e) => {
         e.preventDefault();
+
+        setLoading(true);
 
         try {
             const response = await axios.post(
                 "http://localhost:5000/api/auth/login",
                 {
                     email,
-                    password
+                    password,
                 }
             );
 
             localStorage.setItem("token", response.data.token);
 
-            setMessage("Login successful!");
+            toast.success("Login successful!");
 
-            console.log("Login successful");
+            setTimeout(() => {
+                navigate("/dashboard");
+            }, 700);
         } catch (error) {
-            setMessage(
-                error.response?.data?.message || "Login failed"
+            toast.error(
+                error.response?.data?.message ||
+                    "Login failed. Please check your email and password."
             );
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div>
-            <h1>TripVault</h1>
-            <h2>Login</h2>
+        <div className="auth-page">
+            <div className="auth-card">
 
-            <form onSubmit={handleLogin}>
-                <div>
-                    <label>Email</label>
-                    <br />
-                    <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Enter your email"
-                    />
+                <div className="auth-header">
+                    <div className="auth-logo">🌍</div>
+
+                    <h1>TripVault</h1>
+
+                    <p>
+                        Welcome back! Login to manage your trips.
+                    </p>
                 </div>
 
-                <br />
+                <form onSubmit={handleLogin}>
 
-                <div>
-                    <label>Password</label>
-                    <br />
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter your password"
-                    />
+                    <div className="form-group">
+                        <label htmlFor="email">
+                            Email
+                        </label>
+
+                        <input
+                            id="email"
+                            type="email"
+                            value={email}
+                            onChange={(e) =>
+                                setEmail(e.target.value)
+                            }
+                            placeholder="Enter your email"
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="password">
+                            Password
+                        </label>
+
+                        <input
+                            id="password"
+                            type="password"
+                            value={password}
+                            onChange={(e) =>
+                                setPassword(e.target.value)
+                            }
+                            placeholder="Enter your password"
+                            required
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="auth-button"
+                        disabled={loading}
+                    >
+                        {loading
+                            ? "Logging in..."
+                            : "Login"}
+                    </button>
+
+                </form>
+
+                <div className="auth-footer">
+                    <p>
+                        Don't have an account?{" "}
+                        <Link to="/register">
+                            Create an account
+                        </Link>
+                    </p>
                 </div>
 
-                <br />
-
-                <button type="submit">Login</button>
-            </form>
-
-            {message && <p>{message}</p>}
+            </div>
         </div>
     );
 }

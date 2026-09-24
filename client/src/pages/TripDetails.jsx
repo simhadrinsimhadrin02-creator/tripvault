@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 function TripDetails() {
     const { id } = useParams();
@@ -19,8 +21,8 @@ function TripDetails() {
                     `http://localhost:5000/api/trips/${id}`,
                     {
                         headers: {
-                            Authorization: `Bearer ${token}`
-                        }
+                            Authorization: `Bearer ${token}`,
+                        },
                     }
                 );
 
@@ -28,7 +30,7 @@ function TripDetails() {
             } catch (error) {
                 setMessage(
                     error.response?.data?.message ||
-                    "Failed to load trip"
+                        "Failed to load trip"
                 );
             } finally {
                 setLoading(false);
@@ -38,100 +40,215 @@ function TripDetails() {
         fetchTrip();
     }, [id, token]);
 
+    // ==========================================
+    // LOADING STATE
+    // ==========================================
     if (loading) {
-        return <p>Loading trip...</p>;
+        return (
+            <>
+                <Navbar />
+
+                <div className="page-container">
+                    <div className="loading-state">
+                        <div className="spinner"></div>
+                        <p>Loading trip details...</p>
+                    </div>
+                </div>
+
+                <Footer />
+            </>
+        );
     }
 
+    // ==========================================
+    // TRIP NOT FOUND
+    // ==========================================
     if (!trip) {
         return (
-            <div>
-                <h2>Trip not found</h2>
-                <button onClick={() => navigate("/dashboard")}>
-                    Back to Dashboard
-                </button>
-            </div>
+            <>
+                <Navbar />
+
+                <main className="page-container">
+                    <div className="empty-state">
+                        <div className="empty-icon">🧳</div>
+
+                        <h2>Trip not found</h2>
+
+                        <p>
+                            {message ||
+                                "The trip you are looking for could not be found."}
+                        </p>
+
+                        <button
+                            onClick={() =>
+                                navigate("/dashboard")
+                            }
+                        >
+                            Back to Dashboard
+                        </button>
+                    </div>
+                </main>
+
+                <Footer />
+            </>
         );
     }
 
     return (
         <div>
+            <Navbar />
 
-            <h1>{trip.title}</h1>
+            <main className="page-container">
 
-            {message && <p>{message}</p>}
+                {/* Page Header */}
+                <div className="trip-details-header">
+                    <button
+                        className="back-button"
+                        onClick={() =>
+                            navigate("/dashboard")
+                        }
+                    >
+                        ← Back to Dashboard
+                    </button>
 
-            <p>
-                <strong>Destination:</strong>{" "}
-                {trip.destination}
-            </p>
+                    <h1>{trip.title}</h1>
 
-            <p>
-                <strong>Start Date:</strong>{" "}
-                {trip.startDate
-                    ? new Date(
-                        trip.startDate
-                    ).toLocaleDateString()
-                    : "N/A"}
-            </p>
-
-            <p>
-                <strong>End Date:</strong>{" "}
-                {trip.endDate
-                    ? new Date(
-                        trip.endDate
-                    ).toLocaleDateString()
-                    : "N/A"}
-            </p>
-
-            <p>
-                <strong>Rating:</strong>{" "}
-                ⭐ {trip.rating}/5
-            </p>
-
-            <p>
-                <strong>Description:</strong>{" "}
-                {trip.description || "No description"}
-            </p>
-
-            <hr />
-
-            <h2>Trip Photos</h2>
-
-            {trip.photos && trip.photos.length > 0 ? (
-                <div
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns:
-                            "repeat(3, 1fr)",
-                        gap: "15px"
-                    }}
-                >
-                    {trip.photos.map((photo, index) => (
-                        <div key={index}>
-                            <img
-                                src={photo}
-                                alt={`${trip.title} ${index + 1}`}
-                                style={{
-                                    width: "100%",
-                                    height: "200px",
-                                    objectFit: "cover"
-                                }}
-                            />
-                        </div>
-                    ))}
+                    <p className="trip-destination">
+                        📍 {trip.destination}
+                    </p>
                 </div>
-            ) : (
-                <p>No photos uploaded for this trip.</p>
-            )}
 
-            <br />
+                {/* Error Message */}
+                {message && (
+                    <div className="error-message">
+                        {message}
+                    </div>
+                )}
 
-            <button
-                onClick={() => navigate("/dashboard")}
-            >
-                Back to Dashboard
-            </button>
+                {/* Trip Information */}
+                <section className="trip-details-card card">
 
+                    <h2>Trip Information</h2>
+
+                    <div className="trip-info-grid">
+
+                        <div className="trip-info-item">
+                            <span>📍 Destination</span>
+                            <strong>
+                                {trip.destination}
+                            </strong>
+                        </div>
+
+                        <div className="trip-info-item">
+                            <span>📅 Start Date</span>
+                            <strong>
+                                {trip.startDate
+                                    ? new Date(
+                                          trip.startDate
+                                      ).toLocaleDateString()
+                                    : "N/A"}
+                            </strong>
+                        </div>
+
+                        <div className="trip-info-item">
+                            <span>📅 End Date</span>
+                            <strong>
+                                {trip.endDate
+                                    ? new Date(
+                                          trip.endDate
+                                      ).toLocaleDateString()
+                                    : "N/A"}
+                            </strong>
+                        </div>
+
+                        <div className="trip-info-item">
+                            <span>⭐ Rating</span>
+                            <strong>
+                                {trip.rating}/5
+                            </strong>
+                        </div>
+
+                    </div>
+
+                    <div className="trip-description">
+                        <h3>Description</h3>
+
+                        <p>
+                            {trip.description ||
+                                "No description available for this trip."}
+                        </p>
+                    </div>
+
+                </section>
+
+                {/* Photos */}
+                <section className="trip-photos-section">
+
+                    <div className="section-heading">
+                        <h2>Trip Photos</h2>
+
+                        <span>
+                            {trip.photos
+                                ? trip.photos.length
+                                : 0}{" "}
+                            {trip.photos?.length === 1
+                                ? "Photo"
+                                : "Photos"}
+                        </span>
+                    </div>
+
+                    {trip.photos &&
+                    trip.photos.length > 0 ? (
+                        <div className="photo-grid">
+
+                            {trip.photos.map(
+                                (photo, index) => (
+                                    <div
+                                        className="photo-card"
+                                        key={index}
+                                    >
+                                        <img
+                                            src={photo}
+                                            alt={`${trip.title} ${
+                                                index + 1
+                                            }`}
+                                        />
+                                    </div>
+                                )
+                            )}
+
+                        </div>
+                    ) : (
+                        <div className="empty-state">
+                            <div className="empty-icon">
+                                📷
+                            </div>
+
+                            <h3>No photos yet</h3>
+
+                            <p>
+                                No photos have been uploaded
+                                for this trip.
+                            </p>
+                        </div>
+                    )}
+
+                </section>
+
+                {/* Bottom Button */}
+                <div className="trip-details-actions">
+                    <button
+                        onClick={() =>
+                            navigate("/dashboard")
+                        }
+                    >
+                        ← Back to Dashboard
+                    </button>
+                </div>
+
+            </main>
+
+            <Footer />
         </div>
     );
 }

@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { toast } from "react-toastify";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 function Dashboard() {
     const navigate = useNavigate();
 
     const [user, setUser] = useState(null);
     const [trips, setTrips] = useState([]);
-    const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(true);
 
     const [title, setTitle] = useState("");
@@ -31,8 +33,8 @@ function Dashboard() {
                     "http://localhost:5000/api/auth/me",
                     {
                         headers: {
-                            Authorization: `Bearer ${token}`
-                        }
+                            Authorization: `Bearer ${token}`,
+                        },
                     }
                 );
 
@@ -42,15 +44,17 @@ function Dashboard() {
                     "http://localhost:5000/api/trips",
                     {
                         headers: {
-                            Authorization: `Bearer ${token}`
-                        }
+                            Authorization: `Bearer ${token}`,
+                        },
                     }
                 );
 
                 setTrips(tripsResponse.data.trips);
-
             } catch (error) {
-                setMessage("Unable to load your trips");
+                toast.error(
+                    error.response?.data?.message ||
+                        "Unable to load your trips"
+                );
             } finally {
                 setLoading(false);
             }
@@ -59,7 +63,6 @@ function Dashboard() {
         fetchData();
     }, [token]);
 
-
     // ==========================================
     // CREATE TRIP + PHOTO UPLOAD
     // ==========================================
@@ -67,7 +70,6 @@ function Dashboard() {
         e.preventDefault();
 
         try {
-            // Step 1: Create trip
             const response = await axios.post(
                 "http://localhost:5000/api/trips",
                 {
@@ -76,18 +78,18 @@ function Dashboard() {
                     startDate,
                     endDate,
                     description,
-                    rating: Number(rating)
+                    rating: Number(rating),
                 },
                 {
                     headers: {
-                        Authorization: `Bearer ${token}`
-                    }
+                        Authorization: `Bearer ${token}`,
+                    },
                 }
             );
 
             let createdTrip = response.data.trip;
 
-            // Step 2: Upload photo if selected
+            // Upload photo if selected
             if (selectedImage) {
                 const formData = new FormData();
 
@@ -98,16 +100,18 @@ function Dashboard() {
                     formData,
                     {
                         headers: {
-                            Authorization: `Bearer ${token}`
-                        }
+                            Authorization: `Bearer ${token}`,
+                        },
                     }
                 );
 
                 createdTrip = uploadResponse.data.trip;
             }
 
-            // Add trip to list
-            setTrips([createdTrip, ...trips]);
+            setTrips((currentTrips) => [
+                createdTrip,
+                ...currentTrips,
+            ]);
 
             // Clear form
             setTitle("");
@@ -118,16 +122,14 @@ function Dashboard() {
             setRating("");
             setSelectedImage(null);
 
-            setMessage("Trip created successfully!");
-
+            toast.success("Trip created successfully!");
         } catch (error) {
-            setMessage(
+            toast.error(
                 error.response?.data?.message ||
-                "Failed to create trip"
+                    "Failed to create trip"
             );
         }
     };
-
 
     // ==========================================
     // UPDATE TRIP + PHOTO UPLOAD
@@ -136,7 +138,6 @@ function Dashboard() {
         e.preventDefault();
 
         try {
-            // Step 1: Update trip details
             const response = await axios.put(
                 `http://localhost:5000/api/trips/${editingTrip._id}`,
                 {
@@ -145,18 +146,18 @@ function Dashboard() {
                     startDate,
                     endDate,
                     description,
-                    rating: Number(rating)
+                    rating: Number(rating),
                 },
                 {
                     headers: {
-                        Authorization: `Bearer ${token}`
-                    }
+                        Authorization: `Bearer ${token}`,
+                    },
                 }
             );
 
             let updatedTrip = response.data.trip;
 
-            // Step 2: Upload new photo if selected
+            // Upload new photo if selected
             if (selectedImage) {
                 const formData = new FormData();
 
@@ -167,17 +168,16 @@ function Dashboard() {
                     formData,
                     {
                         headers: {
-                            Authorization: `Bearer ${token}`
-                        }
+                            Authorization: `Bearer ${token}`,
+                        },
                     }
                 );
 
                 updatedTrip = uploadResponse.data.trip;
             }
 
-            // Step 3: Update trip in dashboard
-            setTrips(
-                trips.map((trip) =>
+            setTrips((currentTrips) =>
+                currentTrips.map((trip) =>
                     trip._id === editingTrip._id
                         ? updatedTrip
                         : trip
@@ -196,16 +196,14 @@ function Dashboard() {
             setRating("");
             setSelectedImage(null);
 
-            setMessage("Trip updated successfully!");
-
+            toast.success("Trip updated successfully!");
         } catch (error) {
-            setMessage(
+            toast.error(
                 error.response?.data?.message ||
-                "Failed to update trip"
+                    "Failed to update trip"
             );
         }
     };
-
 
     // ==========================================
     // DELETE TRIP
@@ -224,396 +222,475 @@ function Dashboard() {
                 `http://localhost:5000/api/trips/${tripId}`,
                 {
                     headers: {
-                        Authorization: `Bearer ${token}`
-                    }
+                        Authorization: `Bearer ${token}`,
+                    },
                 }
             );
 
-            setTrips(
-                trips.filter((trip) => trip._id !== tripId)
+            setTrips((currentTrips) =>
+                currentTrips.filter(
+                    (trip) => trip._id !== tripId
+                )
             );
 
-            setMessage("Trip deleted successfully!");
-
+            toast.success("Trip deleted successfully!");
         } catch (error) {
-            setMessage(
+            toast.error(
                 error.response?.data?.message ||
-                "Failed to delete trip"
+                    "Failed to delete trip"
             );
         }
     };
 
-
     // ==========================================
-    // LOGOUT
-    // ==========================================
-    const handleLogout = () => {
-        localStorage.removeItem("token");
-        navigate("/login");
-    };
-
-
-    // ==========================================
-    // LOADING
+    // LOADING STATE
     // ==========================================
     if (loading) {
-        return <p>Loading...</p>;
-    }
+        return (
+            <>
+                <Navbar />
 
+                <div className="page-container">
+                    <div className="loading-state">
+                        <div className="spinner"></div>
+
+                        <p>
+                            Loading your trips...
+                        </p>
+                    </div>
+                </div>
+
+                <Footer />
+            </>
+        );
+    }
 
     // ==========================================
     // DASHBOARD UI
     // ==========================================
     return (
         <div>
+            <Navbar username={user?.username} />
 
-            <h1>TripVault Dashboard</h1>
+            <main className="page-container">
 
-            {user && (
-                <>
-                    <h2>Welcome, {user.name}!</h2>
-                    <button onClick={() => navigate(`/profile/${user.username}`)}>
-    My Profile
-</button>
-                    <p>Email: {user.email}</p>
-                </>
-            )}
+                {/* Header */}
+                <section className="dashboard-header">
+                    <div>
+                        <h1>TripVault Dashboard</h1>
 
-            <hr />
+                        {user && (
+                            <>
+                                <h2>
+                                    Welcome, {user.name}! 👋
+                                </h2>
 
-            <h2>My Trips</h2>
+                                <p className="user-email">
+                                    Email: {user.email}
+                                </p>
+                            </>
+                        )}
+                    </div>
+                </section>
 
-            <h3>
-                {editingTrip
-                    ? "Edit Trip"
-                    : "Create a New Trip"}
-            </h3>
+                {/* Create / Edit Trip */}
+                <section className="trip-form-card card">
 
+                    <h2>
+                        {editingTrip
+                            ? "Edit Trip"
+                            : "Create a New Trip"}
+                    </h2>
 
-            {/* ==========================================
-                CREATE / EDIT FORM
-            ========================================== */}
-
-            <form
-                onSubmit={
-                    editingTrip
-                        ? handleUpdateTrip
-                        : handleCreateTrip
-                }
-            >
-
-                <div>
-                    <label>Trip Title</label>
-                    <br />
-
-                    <input
-                        type="text"
-                        placeholder="Enter trip title"
-                        value={title}
-                        onChange={(e) =>
-                            setTitle(e.target.value)
+                    <form
+                        onSubmit={
+                            editingTrip
+                                ? handleUpdateTrip
+                                : handleCreateTrip
                         }
-                    />
-                </div>
+                    >
 
-                <br />
+                        {/* Trip Title */}
+                        <div className="form-group">
+                            <label htmlFor="trip-title">
+                                Trip Title
+                            </label>
 
+                            <input
+                                id="trip-title"
+                                type="text"
+                                placeholder="Enter trip title"
+                                value={title}
+                                onChange={(e) =>
+                                    setTitle(e.target.value)
+                                }
+                                required
+                            />
+                        </div>
 
-                <div>
-                    <label>Destination</label>
-                    <br />
+                        {/* Destination */}
+                        <div className="form-group">
+                            <label htmlFor="destination">
+                                Destination
+                            </label>
 
-                    <input
-                        type="text"
-                        placeholder="Enter destination"
-                        value={destination}
-                        onChange={(e) =>
-                            setDestination(e.target.value)
-                        }
-                    />
-                </div>
+                            <input
+                                id="destination"
+                                type="text"
+                                placeholder="Enter destination"
+                                value={destination}
+                                onChange={(e) =>
+                                    setDestination(
+                                        e.target.value
+                                    )
+                                }
+                                required
+                            />
+                        </div>
 
-                <br />
+                        {/* Dates */}
+                        <div className="form-row">
 
+                            <div className="form-group">
+                                <label htmlFor="start-date">
+                                    Start Date
+                                </label>
 
-                <div>
-                    <label>Start Date</label>
-                    <br />
-
-                    <input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) =>
-                            setStartDate(e.target.value)
-                        }
-                    />
-                </div>
-
-                <br />
-
-
-                <div>
-                    <label>End Date</label>
-                    <br />
-
-                    <input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) =>
-                            setEndDate(e.target.value)
-                        }
-                    />
-                </div>
-
-                <br />
-
-
-                <div>
-                    <label>Description</label>
-                    <br />
-
-                    <textarea
-                        placeholder="Enter trip description"
-                        value={description}
-                        onChange={(e) =>
-                            setDescription(e.target.value)
-                        }
-                    ></textarea>
-                </div>
-
-                <br />
-
-
-                <div>
-                    <label>Rating</label>
-                    <br />
-
-                    <input
-                        type="number"
-                        min="1"
-                        max="5"
-                        placeholder="1 to 5"
-                        value={rating}
-                        onChange={(e) =>
-                            setRating(e.target.value)
-                        }
-                    />
-                </div>
-
-                <br />
-
-
-                <div>
-    <label>Trip Photo:</label>
-    <br />
-
-    <input
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        onChange={(e) =>
-            setSelectedImage(e.target.files[0])
-        }
-    />
-
-    {selectedImage && (
-        <div style={{ marginTop: "15px" }}>
-            <p>
-                <strong>Photo Preview:</strong>
-            </p>
-
-            <img
-                src={URL.createObjectURL(selectedImage)}
-                alt="Selected trip"
-                width="250"
-                style={{
-                    maxHeight: "200px",
-                    objectFit: "cover"
-                }}
-            />
-        </div>
-    )}
-</div>
-
-                <br />
-
-
-                <button type="submit">
-                    {editingTrip
-                        ? "Update Trip"
-                        : "Create Trip"}
-                </button>
-
-            </form>
-
-            <hr />
-
-
-            {/* ==========================================
-                MESSAGE
-            ========================================== */}
-
-            {message && <p>{message}</p>}
-
-
-            {/* ==========================================
-                TRIP LIST
-            ========================================== */}
-
-            {trips.length === 0 ? (
-
-                <p>
-                    You don't have any trips yet.
-                    Create your first trip!
-                </p>
-
-            ) : (
-
-                trips.map((trip) => (
-
-                    <div key={trip._id}>
-
-                        <h3>{trip.title}</h3>
-
-
-                        <p>
-                            <strong>Destination:</strong>{" "}
-                            {trip.destination}
-                        </p>
-
-
-                        <p>
-                            <strong>Start Date:</strong>{" "}
-                            {trip.startDate
-                                ? new Date(
-                                    trip.startDate
-                                ).toLocaleDateString()
-                                : "N/A"}
-                        </p>
-
-
-                        <p>
-                            <strong>End Date:</strong>{" "}
-                            {trip.endDate
-                                ? new Date(
-                                    trip.endDate
-                                ).toLocaleDateString()
-                                : "N/A"}
-                        </p>
-
-
-                        <p>
-                            <strong>Rating:</strong>{" "}
-                            ⭐ {trip.rating}/5
-                        </p>
-
-
-                        {/* ==========================================
-                            COVER IMAGE
-                        ========================================== */}
-
-                        {trip.coverImage && (
-                            <div>
-                                <img
-                                    src={trip.coverImage}
-                                    alt={trip.title}
-                                    width="250"
+                                <input
+                                    id="start-date"
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) =>
+                                        setStartDate(
+                                            e.target.value
+                                        )
+                                    }
+                                    required
                                 />
                             </div>
-                        )}
 
-                        <br />
+                            <div className="form-group">
+                                <label htmlFor="end-date">
+                                    End Date
+                                </label>
 
+                                <input
+                                    id="end-date"
+                                    type="date"
+                                    value={endDate}
+                                    onChange={(e) =>
+                                        setEndDate(
+                                            e.target.value
+                                        )
+                                    }
+                                    required
+                                />
+                            </div>
 
-                        {/* ==========================================
-                            VIEW DETAILS BUTTON
-                        ========================================== */}
+                        </div>
 
-                        <button
-                            onClick={() =>
-                                navigate(
-                                    `/trip/${trip._id}`
-                                )
-                            }
-                        >
-                            View Details
-                        </button>
+                        {/* Description */}
+                        <div className="form-group">
+                            <label htmlFor="description">
+                                Description
+                            </label>
 
+                            <textarea
+                                id="description"
+                                placeholder="Enter trip description"
+                                value={description}
+                                onChange={(e) =>
+                                    setDescription(
+                                        e.target.value
+                                    )
+                                }
+                                rows="4"
+                            ></textarea>
+                        </div>
 
-                        {/* ==========================================
-                            EDIT BUTTON
-                        ========================================== */}
+                        {/* Rating */}
+                        <div className="form-group">
+                            <label htmlFor="rating">
+                                Rating
+                            </label>
 
-                        <button
-                            onClick={() => {
-                                setEditingTrip(trip);
+                            <input
+                                id="rating"
+                                type="number"
+                                min="1"
+                                max="5"
+                                placeholder="1 to 5"
+                                value={rating}
+                                onChange={(e) =>
+                                    setRating(e.target.value)
+                                }
+                                required
+                            />
+                        </div>
 
-                                setTitle(trip.title);
+                        {/* Photo */}
+                        <div className="form-group">
+                            <label htmlFor="trip-photo">
+                                Trip Photo
+                            </label>
 
-                                setDestination(
-                                    trip.destination
-                                );
+                            <input
+                                id="trip-photo"
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                onChange={(e) =>
+                                    setSelectedImage(
+                                        e.target.files[0] ||
+                                            null
+                                    )
+                                }
+                            />
 
-                                setStartDate(
-                                    trip.startDate
-                                        ? trip.startDate.split("T")[0]
-                                        : ""
-                                );
+                            {selectedImage && (
+                                <div className="photo-preview">
+                                    <p>
+                                        <strong>
+                                            Photo Preview:
+                                        </strong>
+                                    </p>
 
-                                setEndDate(
-                                    trip.endDate
-                                        ? trip.endDate.split("T")[0]
-                                        : ""
-                                );
+                                    <img
+                                        src={URL.createObjectURL(
+                                            selectedImage
+                                        )}
+                                        alt="Selected trip"
+                                    />
+                                </div>
+                            )}
+                        </div>
 
-                                setDescription(
-                                    trip.description || ""
-                                );
+                        {/* Submit Buttons */}
+                        <div className="form-actions">
 
-                                setRating(
-                                    trip.rating || ""
-                                );
-                            }}
-                            style={{
-                                marginLeft: "10px"
-                            }}
-                        >
-                            Edit
-                        </button>
+                            <button type="submit">
+                                {editingTrip
+                                    ? "Update Trip"
+                                    : "Create Trip"}
+                            </button>
 
+                            {editingTrip && (
+                                <button
+                                    type="button"
+                                    className="secondary-button"
+                                    onClick={() => {
+                                        setEditingTrip(null);
+                                        setTitle("");
+                                        setDestination("");
+                                        setStartDate("");
+                                        setEndDate("");
+                                        setDescription("");
+                                        setRating("");
+                                        setSelectedImage(null);
+                                    }}
+                                >
+                                    Cancel Edit
+                                </button>
+                            )}
 
-                        {/* ==========================================
-                            DELETE BUTTON
-                        ========================================== */}
+                        </div>
 
-                        <button
-                            onClick={() =>
-                                handleDeleteTrip(
-                                    trip._id
-                                )
-                            }
-                            style={{
-                                marginLeft: "10px"
-                            }}
-                        >
-                            Delete
-                        </button>
+                    </form>
+                </section>
 
-                        <hr />
+                {/* My Trips */}
+                <section className="trips-section">
 
+                    <div className="section-heading">
+                        <h2>My Trips</h2>
+
+                        <span>
+                            {trips.length}{" "}
+                            {trips.length === 1
+                                ? "Trip"
+                                : "Trips"}
+                        </span>
                     </div>
 
-                ))
-            )}
+                    {trips.length === 0 ? (
 
+                        <div className="empty-state">
 
-            {/* ==========================================
-                LOGOUT
-            ========================================== */}
+                            <div className="empty-icon">
+                                🧳
+                            </div>
 
-            <button onClick={handleLogout}>
-                Logout
-            </button>
+                            <h3>
+                                You don't have any trips yet.
+                            </h3>
 
+                            <p>
+                                Create your first trip and
+                                start your journey!
+                            </p>
+
+                        </div>
+
+                    ) : (
+
+                        <div className="trip-grid">
+
+                            {trips.map((trip) => (
+
+                                <article
+                                    className="trip-card"
+                                    key={trip._id}
+                                >
+
+                                    {/* Cover Image */}
+                                    {trip.coverImage ? (
+                                        <img
+                                            className="trip-card-image"
+                                            src={trip.coverImage}
+                                            alt={trip.title}
+                                        />
+                                    ) : (
+                                        <div className="trip-card-placeholder">
+                                            🗺️
+                                        </div>
+                                    )}
+
+                                    <div className="trip-card-content">
+
+                                        <h3>
+                                            {trip.title}
+                                        </h3>
+
+                                        <p>
+                                            <strong>
+                                                📍 Destination:
+                                            </strong>{" "}
+                                            {trip.destination}
+                                        </p>
+
+                                        <p>
+                                            <strong>
+                                                📅 Start:
+                                            </strong>{" "}
+                                            {trip.startDate
+                                                ? new Date(
+                                                      trip.startDate
+                                                  ).toLocaleDateString()
+                                                : "N/A"}
+                                        </p>
+
+                                        <p>
+                                            <strong>
+                                                📅 End:
+                                            </strong>{" "}
+                                            {trip.endDate
+                                                ? new Date(
+                                                      trip.endDate
+                                                  ).toLocaleDateString()
+                                                : "N/A"}
+                                        </p>
+
+                                        <p>
+                                            <strong>
+                                                ⭐ Rating:
+                                            </strong>{" "}
+                                            {trip.rating}/5
+                                        </p>
+
+                                        <div className="trip-card-actions">
+
+                                            <button
+                                                onClick={() =>
+                                                    navigate(
+                                                        `/trip/${trip._id}`
+                                                    )
+                                                }
+                                            >
+                                                View Details
+                                            </button>
+
+                                            <button
+                                                onClick={() => {
+                                                    setEditingTrip(
+                                                        trip
+                                                    );
+
+                                                    setTitle(
+                                                        trip.title
+                                                    );
+
+                                                    setDestination(
+                                                        trip.destination
+                                                    );
+
+                                                    setStartDate(
+                                                        trip.startDate
+                                                            ? trip.startDate.split(
+                                                                  "T"
+                                                              )[0]
+                                                            : ""
+                                                    );
+
+                                                    setEndDate(
+                                                        trip.endDate
+                                                            ? trip.endDate.split(
+                                                                  "T"
+                                                              )[0]
+                                                            : ""
+                                                    );
+
+                                                    setDescription(
+                                                        trip.description ||
+                                                            ""
+                                                    );
+
+                                                    setRating(
+                                                        trip.rating ||
+                                                            ""
+                                                    );
+
+                                                    setSelectedImage(
+                                                        null
+                                                    );
+
+                                                    window.scrollTo({
+                                                        top: 0,
+                                                        behavior:
+                                                            "smooth",
+                                                    });
+                                                }}
+                                            >
+                                                Edit
+                                            </button>
+
+                                            <button
+                                                className="danger-button"
+                                                onClick={() =>
+                                                    handleDeleteTrip(
+                                                        trip._id
+                                                    )
+                                                }
+                                            >
+                                                Delete
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+                                </article>
+
+                            ))}
+
+                        </div>
+
+                    )}
+
+                </section>
+
+            </main>
+
+            {/* Footer */}
+            <Footer />
         </div>
     );
 }
