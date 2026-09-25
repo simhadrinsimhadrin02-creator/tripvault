@@ -30,7 +30,7 @@ function Dashboard() {
         const fetchData = async () => {
             try {
                 const userResponse = await axios.get(
-                    "http://localhost:5000/api/auth/me",
+                    `${import.meta.env.VITE_API_URL}/api/auth/me`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -41,7 +41,7 @@ function Dashboard() {
                 setUser(userResponse.data.user);
 
                 const tripsResponse = await axios.get(
-                    "http://localhost:5000/api/trips",
+                    `${import.meta.env.VITE_API_URL}/api/trips`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -71,7 +71,7 @@ function Dashboard() {
 
         try {
             const response = await axios.post(
-                "http://localhost:5000/api/trips",
+                `${import.meta.env.VITE_API_URL}/api/trips`,
                 {
                     title,
                     destination,
@@ -96,7 +96,7 @@ function Dashboard() {
                 formData.append("image", selectedImage);
 
                 const uploadResponse = await axios.post(
-                    `http://localhost:5000/api/trips/${createdTrip._id}/upload`,
+                    `${import.meta.env.VITE_API_URL}/api/trips/${createdTrip._id}/upload`,
                     formData,
                     {
                         headers: {
@@ -139,7 +139,7 @@ function Dashboard() {
 
         try {
             const response = await axios.put(
-                `http://localhost:5000/api/trips/${editingTrip._id}`,
+                `${import.meta.env.VITE_API_URL}/api/trips/${editingTrip._id}`,
                 {
                     title,
                     destination,
@@ -164,7 +164,7 @@ function Dashboard() {
                 formData.append("image", selectedImage);
 
                 const uploadResponse = await axios.post(
-                    `http://localhost:5000/api/trips/${editingTrip._id}/upload`,
+                    `${import.meta.env.VITE_API_URL}/api/trips/${editingTrip._id}/upload`,
                     formData,
                     {
                         headers: {
@@ -219,7 +219,7 @@ function Dashboard() {
 
         try {
             await axios.delete(
-                `http://localhost:5000/api/trips/${tripId}`,
+                `${import.meta.env.VITE_API_URL}/api/trips/${tripId}`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,

@@ -18,7 +18,7 @@ function TripDetails() {
         const fetchTrip = async () => {
             try {
                 const response = await axios.get(
-                    `http://localhost:5000/api/trips/${id}`,
+                    `${import.meta.env.VITE_API_URL}/api/trips/${id}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,

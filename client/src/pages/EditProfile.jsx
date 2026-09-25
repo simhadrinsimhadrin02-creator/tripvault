@@ -19,7 +19,7 @@ function EditProfile() {
         const fetchUser = async () => {
             try {
                 const response = await axios.get(
-                    "http://localhost:5000/api/auth/me",
+                    `${import.meta.env.VITE_API_URL}/api/auth/me`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -50,7 +50,7 @@ function EditProfile() {
 
         try {
             const response = await axios.put(
-                "http://localhost:5000/api/users/profile",
+                `${import.meta.env.VITE_API_URL}/api/auth/me`,
                 {
                     bio,
                 },
