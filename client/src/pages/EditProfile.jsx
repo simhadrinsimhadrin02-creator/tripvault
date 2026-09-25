@@ -15,6 +15,9 @@ function EditProfile() {
 
     const token = localStorage.getItem("token");
 
+    // ==========================================
+    // LOAD USER PROFILE
+    // ==========================================
     useEffect(() => {
         const fetchUser = async () => {
             try {
@@ -39,9 +42,17 @@ function EditProfile() {
             }
         };
 
-        fetchUser();
+        if (token) {
+            fetchUser();
+        } else {
+            setMessage("Please login first.");
+            setLoading(false);
+        }
     }, [token]);
 
+    // ==========================================
+    // UPDATE USER PROFILE
+    // ==========================================
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -50,9 +61,9 @@ function EditProfile() {
 
         try {
             const response = await axios.put(
-                `${import.meta.env.VITE_API_URL}/api/auth/me`,
+                `${import.meta.env.VITE_API_URL}/api/users/profile`,
                 {
-                    bio,
+                    bio: bio.trim(),
                 },
                 {
                     headers: {
@@ -70,6 +81,8 @@ function EditProfile() {
                 navigate(`/profile/${username}`);
             }, 1000);
         } catch (error) {
+            console.error("Profile update error:", error);
+
             setMessage(
                 error.response?.data?.message ||
                     "Failed to update profile"
@@ -87,24 +100,26 @@ function EditProfile() {
             <>
                 <Navbar />
 
-                <div className="page-container">
+                <main className="page-container">
                     <div className="loading-state">
                         <div className="spinner"></div>
                         <p>Loading profile...</p>
                     </div>
-                </div>
+                </main>
 
                 <Footer />
             </>
         );
     }
 
+    // ==========================================
+    // EDIT PROFILE PAGE
+    // ==========================================
     return (
         <div>
             <Navbar username={username} />
 
             <main className="page-container">
-
                 <div className="edit-profile-wrapper">
 
                     <section className="edit-profile-card card">
@@ -159,7 +174,7 @@ function EditProfile() {
                                     rows="6"
                                     placeholder="Write something about yourself..."
                                     maxLength="300"
-                                ></textarea>
+                                />
 
                                 <div className="character-count">
                                     {bio.length}/300 characters
@@ -197,7 +212,6 @@ function EditProfile() {
                     </section>
 
                 </div>
-
             </main>
 
             <Footer />
